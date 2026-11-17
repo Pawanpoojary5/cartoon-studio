@@ -15,6 +15,8 @@ export type Leg = { h: number; k: number }; // hip swing (forward), knee bend (b
 
 export type Pose = {
   y: number; // extra vertical offset in px (negative = up, e.g. jump)
+  rot?: number; // whole-body rotation about the HIPS. >0 = forward (trip), <0 = backward (slip)
+  dx?: number; // body shift along the facing direction (px) - used so falls travel
   lean: number; // torso lean, forward positive
   head: number; // head tilt, forward positive
   armL: Arm;
@@ -109,6 +111,8 @@ type Props = {
   blink?: number; // 0 open .. 1 closed
   facing?: 1 | -1;
   scale?: number;
+  shirt?: string;
+  hair?: string;
 };
 
 /** Render inside an <svg>. Pure component (no Remotion hooks) so it is easy to test. */
@@ -121,18 +125,29 @@ export const Stickman: React.FC<Props> = ({
   blink = 0,
   facing = 1,
   scale = 1,
+  shirt = "#fff",
+  hair = INK,
 }) => {
   // Lowest foot touches the ground automatically (no floating / sinking while walking).
   const reach = Math.max(footReach(pose.legL), footReach(pose.legR));
   const hipY = -(reach + DIM.shoe) + pose.y;
+  const rot = pose.rot ?? 0;
+  const a = Math.min(1, Math.abs(rot) / 90); // 0 standing .. 1 lying
+  const LIE = 48; // hip height when lying on the ground
+  const hipFinal = hipY * (1 - a) - LIE * a;
+  const outer = `translate(${pose.dx ?? 0} 0)`;
+  const hipTf = `translate(0 ${hipFinal}) rotate(${rot})`;
+  const shadowRx = 80 + a * 160;
+  const shadowCx = (pose.dx ?? 0) + 10 + (rot >= 0 ? a * 65 : -a * 65);
   const brows = BROWS[expression];
   const big = expression === "shocked";
   const talking = mouthOpen > 0.05 && expression !== "laughing";
 
   return (
     <g transform={`translate(${x} ${groundY}) scale(${facing * scale} ${scale})`}>
-      <ellipse cx={10} cy={2} rx={80} ry={10} fill="#000" opacity={0.12} />
-      <g transform={`translate(0 ${hipY})`}>
+      <ellipse cx={shadowCx} cy={2} rx={shadowRx} ry={10} fill="#000" opacity={0.12} />
+      <g transform={outer}>
+      <g transform={hipTf}>
         <Leg_ x={-26} leg={pose.legL} />
         <Leg_ x={26} leg={pose.legR} />
 
@@ -143,7 +158,7 @@ export const Stickman: React.FC<Props> = ({
             width={DIM.torsoW}
             height={DIM.torsoH}
             rx={10}
-            fill="#fff"
+            fill={shirt}
             stroke={INK}
             strokeWidth={DIM.line}
           />
@@ -156,7 +171,7 @@ export const Stickman: React.FC<Props> = ({
               <circle r={DIM.head} fill="#fff" stroke={INK} strokeWidth={DIM.line} />
               <path
                 d="M -72 -6 C -88 -72 -30 -110 20 -94 C 64 -82 84 -40 71 -2 C 52 -40 12 -58 -30 -50 C -52 -46 -66 -30 -72 -6 Z"
-                fill={INK}
+                fill={hair}
               />
               <Eye x={-27} r={big ? 21 : 17} pupil={big ? 5 : 7} blink={blink} />
               <Eye x={27} r={big ? 21 : 17} pupil={big ? 5 : 7} blink={blink} />
@@ -178,6 +193,7 @@ export const Stickman: React.FC<Props> = ({
             </g>
           </g>
         </g>
+      </g>
       </g>
     </g>
   );

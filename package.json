@@ -9,20 +9,27 @@
   },
   "private": true,
   "dependencies": {
+    "@remotion/bundler": "4.0.544",
     "@remotion/cli": "4.0.544",
+    "@remotion/renderer": "4.0.544",
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "remotion": "4.0.544"
   },
   "devDependencies": {
     "@remotion/eslint-config-flat": "4.0.544",
+    "@types/node": "^26.6.6",
     "@types/react": "19.3.0",
     "@types/web": "0.0.166",
     "eslint": "10.12.0",
     "prettier": "3.8.1",
+    "tsx": "4.19.2",
     "typescript": "5.9.3"
   },
   "scripts": {
+    "render": "tsx scripts/render.ts",
+    "voices:list": "tsx scripts/voices.ts list",
+    "voices:process": "tsx scripts/voices.ts process",
     "dev": "remotion studio",
     "build": "remotion bundle",
     "upgrade": "remotion upgrade",
